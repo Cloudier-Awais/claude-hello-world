@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Animated Burger</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #ff6b35;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(255,107,53,0.5);
+      letter-spacing: 2px;
+    }
+
+    p.subtitle {
+      color: #aaa;
+      margin-bottom: 50px;
+      font-size: 1rem;
+    }
+
+    /* ===== BURGER WRAPPER ===== */
+    .burger-scene {
+      position: relative;
+      width: 300px;
+      height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .burger {
+      position: relative;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0px;
+      transition: transform 0.3s ease;
+    }
+
+    /* ===== BURGER LAYERS ===== */
+    .layer {
+      position: relative;
+      width: 100%;
+      transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+                  opacity 0.6s ease;
+      transform-origin: center center;
+    }
+
+    /* Top Bun */
+    .bun-top {
+      z-index: 10;
+    }
+    .bun-top svg { width: 100%; display: block; }
+
+    /* Sesame seeds animate */
+    .seed {
+      animation: seedBounce 2s infinite ease-in-out;
+    }
+    .seed:nth-child(2) { animation-delay: 0.3s; }
+    .seed:nth-child(3) { animation-delay: 0.6s; }
+    .seed:nth-child(4) { animation-delay: 0.2s; }
+    .seed:nth-child(5) { animation-delay: 0.8s; }
+
+    @keyframes seedBounce {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.15) translateY(-1px); }
+    }
+
+    /* Lettuce wiggle */
+    .lettuce-layer {
+      animation: lettuceWiggle 3s infinite ease-in-out;
+    }
+    @keyframes lettuceWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(1deg); }
+      75% { transform: rotate(-1deg); }
+    }
+
+    /* Cheese melt */
+    .cheese-layer {
+      animation: cheeseMelt 2s infinite ease-in-out;
+    }
+    @keyframes cheeseMelt {
+      0%, 100% { transform: scaleX(1); }
+      50% { transform: scaleX(1.03); }
+    }
+
+    /* Patty sizzle */
+    .patty-layer {
+      animation: pattySizzle 1.5s infinite ease-in-out;
+    }
+    @keyframes pattySizzle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(1px); }
+    }
+
+    /* Steam */
+    .steam-container {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 18px;
+    }
+
+    .steam {
+      width: 6px;
+      height: 40px;
+      background: linear-gradient(to top, rgba(255,255,255,0.5), transparent);
+      border-radius: 50%;
+      animation: steamRise 2s infinite ease-in-out;
+      opacity: 0;
+    }
+    .steam:nth-child(1) { animation-delay: 0s; }
+    .steam:nth-child(2) { animation-delay: 0.4s; }
+    .steam:nth-child(3) { animation-delay: 0.8s; }
+
+    @keyframes steamRise {
+      0%   { opacity: 0; transform: translateY(0) scaleX(1); }
+      30%  { opacity: 0.7; }
+      100% { opacity: 0; transform: translateY(-50px) scaleX(2); }
+    }
+
+    /* Shine on bun */
+    .bun-shine {
+      animation: shine 3s infinite ease-in-out;
+    }
+    @keyframes shine {
+      0%, 100% { opacity: 0.3; }
+      50%       { opacity: 0.7; }
+    }
+
+    /* ===== DISASSEMBLE STATE ===== */
+    .burger.disassembled .layer-bun-top    { transform: translateY(-160px) rotate(-8deg); }
+    .burger.disassembled .layer-lettuce    { transform: translateY(-110px) translateX(30px) rotate(12deg); }
+    .burger.disassembled .layer-tomato     { transform: translateY(-70px) translateX(-25px) rotate(-10deg); }
+    .burger.disassembled .layer-cheese     { transform: translateY(70px) translateX(25px) rotate(8deg); }
+    .burger.disassembled .layer-patty      { transform: translateY(110px) translateX(-20px) rotate(-6deg); }
+    .burger.disassembled .layer-onion      { transform: translateY(150px) translateX(15px) rotate(15deg); }
+    .burger.disassembled .layer-bun-bottom { transform: translateY(190px) rotate(5deg); }
+
+    .burger.disassembled .steam-container { opacity: 0; }
+
+    /* Pause animations when disassembled */
+    .burger.disassembled .lettuce-layer { animation: none; }
+    .burger.disassembled .cheese-layer  { animation: none; }
+    .burger.disassembled .patty-layer   { animation: none; }
+    .burger.disassembled .seed          { animation: none; }
+    .burger.disassembled .steam         { animation: none; }
+
+    /* ===== BUTTON ===== */
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      margin-top: 60px;
+    }
+
+    button {
+      padding: 14px 36px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    #disassembleBtn {
+      background: linear-gradient(135deg, #ff6b35, #f7c59f);
+      color: #1a1a2e;
+      box-shadow: 0 4px 20px rgba(255,107,53,0.4);
+    }
+    #disassembleBtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255,107,53,0.6);
+    }
+
+    #assembleBtn {
+      background: linear-gradient(135deg, #43aa8b, #90be6d);
+      color: #1a1a2e;
+      box-shadow: 0 4px 20px rgba(67,170,139,0.4);
+      display: none;
+    }
+    #assembleBtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(67,170,139,0.6);
+    }
+
+    /* ===== LABELS (appear on disassemble) ===== */
+    .layer-label {
+      position: absolute;
+      right: -90px;
+      font-size: 0.75rem;
+      color: #ff6b35;
+      opacity: 0;
+      transition: opacity 0.5s ease 0.6s;
+      white-space: nowrap;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .burger.disassembled .layer-label {
+      opacity: 1;
+    }
+
+    .layer { position: relative; }
+  </style>
+</head>
+<body>
+
+  <h1>Burger Builder</h1>
+  <p class="subtitle">A perfectly crafted animated burger</p>
+
+  <div class="burger-scene">
+    <!-- Steam -->
+    <div class="steam-container">
+      <div class="steam"></div>
+      <div class="steam"></div>
+      <div class="steam"></div>
+    </div>
+
+    <div class="burger" id="burger">
+
+      <!-- TOP BUN -->
+      <div class="layer layer-bun-top bun-top">
+        <span class="layer-label">Top Bun</span>
+        <svg viewBox="0 0 220 90" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bunTopGrad" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stop-color="#f5c842"/>
+              <stop offset="100%" stop-color="#c8860a"/>
+            </radialGradient>
+          </defs>
+          <!-- Bun dome -->
+          <ellipse cx="110" cy="50" rx="105" ry="45" fill="url(#bunTopGrad)"/>
+          <ellipse cx="110" cy="85" rx="105" ry="12" fill="#b87014"/>
+          <!-- Shine -->
+          <ellipse class="bun-shine" cx="80" cy="30" rx="30" ry="12" fill="rgba(255,255,200,0.3)" transform="rotate(-15 80 30)"/>
+          <!-- Seeds -->
+          <g class="seed"><ellipse cx="85" cy="38" rx="9" ry="5" fill="#f0e68c" transform="rotate(-20 85 38)"/></g>
+          <g class="seed"><ellipse cx="125" cy="28" rx="9" ry="5" fill="#f0e68c" transform="rotate(10 125 28)"/></g>
+          <g class="seed"><ellipse cx="155" cy="45" rx="8" ry="4" fill="#f0e68c" transform="rotate(-30 155 45)"/></g>
+          <g class="seed"><ellipse cx="60" cy="55" rx="8" ry="4" fill="#f0e68c" transform="rotate(25 60 55)"/></g>
+          <g class="seed"><ellipse cx="110" cy="22" rx="9" ry="5" fill="#f0e68c" transform="rotate(5 110 22)"/></g>
+        </svg>
+      </div>
+
+      <!-- LETTUCE -->
+      <div class="layer layer-lettuce lettuce-layer" style="margin-top:-8px;">
+        <span class="layer-label">Lettuce</span>
+        <svg viewBox="0 0 220 30" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5,15 Q20,2 40,15 Q60,28 80,12 Q100,2 120,15 Q140,28 160,10 Q180,2 200,15 Q215,22 215,15 L215,28 L5,28 Z"
+                fill="#4caf50" opacity="0.9"/>
+          <path d="M5,15 Q20,5 40,15 Q60,25 80,12 Q100,3 120,15 Q140,25 160,10 Q180,3 200,15"
+                fill="none" stroke="#388e3c" stroke-width="1.5" opacity="0.7"/>
+        </svg>
+      </div>
+
+      <!-- TOMATO -->
+      <div class="layer layer-tomato" style="margin-top:-4px;">
+        <span class="layer-label">Tomato</span>
+        <svg viewBox="0 0 220 22" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="2" width="55" height="18" rx="9" fill="#e53935" opacity="0.95"/>
+          <rect x="75" y="2" width="65" height="18" rx="9" fill="#e53935" opacity="0.95"/>
+          <rect x="150" y="2" width="60" height="18" rx="9" fill="#e53935" opacity="0.95"/>
+          <!-- Seed lines -->
+          <line x1="30" y1="5" x2="30" y2="17" stroke="rgba(255,200,200,0.5)" stroke-width="1.5"/>
+          <line x1="103" y1="5" x2="103" y2="17" stroke="rgba(255,200,200,0.5)" stroke-width="1.5"/>
+          <line x1="172" y1="5" x2="172" y2="17" stroke="rgba(255,200,200,0.5)" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <!-- CHEESE -->
+      <div class="layer layer-cheese cheese-layer" style="margin-top:-2px;">
+        <span class="layer-label">Cheese</span>
+        <svg viewBox="0 0 220 22" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cheeseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffd740"/>
+              <stop offset="100%" stop-color="#ffab00"/>
+            </linearGradient>
+          </defs>
+          <!-- Cheese drips on sides -->
+          <path d="M0,0 L220,0 L220,14 Q200,22 190,14 Q180,6 170,14 L10,14 Q5,22 0,14 Z" fill="url(#cheeseGrad)"/>
+        </svg>
+      </div>
+
+      <!-- PATTY -->
+      <div class="layer layer-patty patty-layer" style="margin-top:-2px;">
+        <span class="layer-label">Beef Patty</span>
+        <svg viewBox="0 0 220 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="pattyGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#6d4c41"/>
+              <stop offset="100%" stop-color="#3e2723"/>
+            </radialGradient>
+          </defs>
+          <rect x="5" y="4" width="210" height="32" rx="10" fill="url(#pattyGrad)"/>
+          <!-- Grill marks -->
+          <line x1="40" y1="8" x2="40" y2="32" stroke="rgba(0,0,0,0.3)" stroke-width="4" stroke-linecap="round"/>
+          <line x1="80" y1="8" x2="80" y2="32" stroke="rgba(0,0,0,0.3)" stroke-width="4" stroke-linecap="round"/>
+          <line x1="120" y1="8" x2="120" y2="32" stroke="rgba(0,0,0,0.3)" stroke-width="4" stroke-linecap="round"/>
+          <line x1="160" y1="8" x2="160" y2="32" stroke="rgba(0,0,0,0.3)" stroke-width="4" stroke-linecap="round"/>
+          <!-- Sear highlight -->
+          <rect x="5" y="4" width="210" height="8" rx="10" fill="rgba(255,200,100,0.1)"/>
+        </svg>
+      </div>
+
+      <!-- ONION -->
+      <div class="layer layer-onion" style="margin-top:-4px;">
+        <span class="layer-label">Onion</span>
+        <svg viewBox="0 0 220 20" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="10" rx="40" ry="8" fill="none" stroke="#ce93d8" stroke-width="4" opacity="0.85"/>
+          <ellipse cx="120" cy="10" rx="40" ry="8" fill="none" stroke="#ce93d8" stroke-width="4" opacity="0.85"/>
+          <ellipse cx="185" cy="10" rx="28" ry="7" fill="none" stroke="#ce93d8" stroke-width="4" opacity="0.85"/>
+        </svg>
+      </div>
+
+      <!-- BOTTOM BUN -->
+      <div class="layer layer-bun-bottom" style="margin-top:-4px;">
+        <span class="layer-label">Bottom Bun</span>
+        <svg viewBox="0 0 220 45" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bunBotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f5c842"/>
+              <stop offset="100%" stop-color="#c8860a"/>
+            </linearGradient>
+          </defs>
+          <rect x="5" y="0" width="210" height="30" rx="5" fill="url(#bunBotGrad)"/>
+          <ellipse cx="110" cy="30" rx="105" ry="14" fill="#b87014"/>
+          <!-- Sesame bottom -->
+          <ellipse cx="110" cy="38" rx="105" ry="6" fill="#9a5e0a"/>
+        </svg>
+      </div>
+
+    </div><!-- end .burger -->
+  </div><!-- end .burger-scene -->
+
+  <div class="btn-group">
+    <button id="disassembleBtn">Disassemble Burger</button>
+    <button id="assembleBtn">Reassemble Burger</button>
+  </div>
+
+  <script src="burger.js"></script>
+
+</body>
+</html>
