@@ -1,359 +1,234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Animated Ice Cream</title>
+  <title>Solar System Explorer 🚀</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #fce4ec, #e1f5fe, #f3e5f5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Segoe UI', sans-serif;
-      overflow: hidden;
+      background:#000;
+      color:#fff;
+      font-family:'Segoe UI',sans-serif;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      overflow-x:hidden;
     }
 
-    h1 {
-      color: #e91e8c;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 0 0 20px rgba(233,30,140,0.3);
-      letter-spacing: 2px;
+    /* ===== HEADER ===== */
+    header {
+      width:100%;
+      text-align:center;
+      padding:14px 0 6px;
+      background:linear-gradient(180deg,rgba(10,10,40,1),transparent);
+      position:relative;
+      z-index:10;
+    }
+    header h1 {
+      font-size:2rem;
+      letter-spacing:4px;
+      background:linear-gradient(90deg,#ff9500,#ffe066,#ff9500);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      text-shadow:none;
+    }
+    header p { color:#aaa; font-size:0.82rem; letter-spacing:2px; margin-top:2px; }
+
+    /* ===== CANVAS AREA ===== */
+    #solarCanvas {
+      display:block;
+      cursor:pointer;
     }
 
-    p.subtitle {
-      color: #999;
-      margin-bottom: 50px;
-      font-size: 1rem;
+    /* ===== FACT CARD ===== */
+    #factCard {
+      position:fixed;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      background:linear-gradient(135deg,rgba(10,10,40,0.97),rgba(5,5,25,0.98));
+      border:2px solid;
+      border-radius:20px;
+      padding:28px 32px;
+      max-width:380px;
+      width:90%;
+      z-index:100;
+      opacity:0;
+      pointer-events:none;
+      transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      text-align:center;
     }
+    #factCard.show {
+      opacity:1;
+      pointer-events:all;
+      transform:translate(-50%,-50%) scale(1);
+    }
+    #factCard h2 { font-size:1.6rem; margin-bottom:10px; }
+    #factCard .planet-icon { font-size:3.5rem; margin-bottom:10px; }
+    #factCard p  { color:#ccc; font-size:0.92rem; line-height:1.6; }
+    #factCard .facts-list { margin-top:12px; text-align:left; }
+    #factCard .facts-list li { color:#aef; font-size:0.85rem; margin:5px 0; list-style:none; padding-left:16px; position:relative; }
+    #factCard .facts-list li::before { content:'🌟'; position:absolute; left:-2px; font-size:0.7rem; top:2px; }
+    #closeCard {
+      margin-top:18px;
+      padding:8px 28px;
+      border:none;
+      border-radius:50px;
+      background:linear-gradient(135deg,#ff9500,#ffe066);
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:0.9rem;
+    }
+    #overlay {
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.6);
+      z-index:99;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 0.3s;
+    }
+    #overlay.show { opacity:1; pointer-events:all; }
 
-    /* ===== SCENE ===== */
-    .icecream-scene {
-      position: relative;
-      width: 300px;
-      height: 420px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* ===== QUIZ PANEL ===== */
+    #quizPanel {
+      position:fixed;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%) scale(0.85);
+      background:linear-gradient(135deg,rgba(5,10,40,0.98),rgba(0,5,20,0.98));
+      border:2px solid #a29bfe;
+      border-radius:20px;
+      padding:28px 32px;
+      max-width:400px;
+      width:92%;
+      z-index:100;
+      opacity:0;
+      pointer-events:none;
+      transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      text-align:center;
     }
+    #quizPanel.show { opacity:1; pointer-events:all; transform:translate(-50%,-50%) scale(1); }
+    #quizPanel h2 { color:#a29bfe; font-size:1.4rem; margin-bottom:14px; }
+    #quizQuestion { font-size:1rem; color:#eee; margin-bottom:18px; line-height:1.5; }
+    .quiz-opt {
+      display:block;
+      width:100%;
+      margin:7px 0;
+      padding:10px 16px;
+      border:2px solid rgba(162,155,254,0.4);
+      border-radius:12px;
+      background:rgba(162,155,254,0.08);
+      color:#fff;
+      cursor:pointer;
+      font-size:0.9rem;
+      text-align:left;
+      transition:all 0.2s;
+    }
+    .quiz-opt:hover { background:rgba(162,155,254,0.2); border-color:#a29bfe; }
+    .quiz-opt.correct { background:rgba(0,200,100,0.25); border-color:#00c864; color:#00ff88; }
+    .quiz-opt.wrong   { background:rgba(255,50,50,0.2);  border-color:#ff3232; color:#ff8888; }
+    #quizFeedback { margin-top:12px; font-size:1.1rem; min-height:24px; }
+    #quizScore { color:#ffeaa7; font-size:0.85rem; margin-top:8px; }
+    #quizClose { margin-top:14px; padding:8px 24px; border:none; border-radius:50px; background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:#fff; font-weight:bold; cursor:pointer; }
+    #quizNext  { margin-top:8px; padding:8px 24px; border:none; border-radius:50px; background:linear-gradient(135deg,#00cec9,#55efc4); color:#000; font-weight:bold; cursor:pointer; display:none; }
 
-    .icecream {
-      position: relative;
-      width: 200px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: transform 0.3s ease;
+    /* ===== CONTROLS ===== */
+    .controls {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:center;
+      padding:14px 12px 18px;
+      max-width:860px;
     }
+    button.ctrl {
+      padding:9px 18px;
+      border:none;
+      border-radius:50px;
+      font-size:0.82rem;
+      font-weight:bold;
+      cursor:pointer;
+      letter-spacing:0.5px;
+      transition:all 0.2s;
+      box-shadow:0 3px 10px rgba(0,0,0,0.3);
+    }
+    button.ctrl:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.4); }
+    button.ctrl:active { transform:translateY(0); }
 
-    /* ===== LAYERS ===== */
-    .layer {
-      position: relative;
-      width: 100%;
-      transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55),
-                  opacity 0.6s ease;
-      transform-origin: center center;
-    }
+    .c1  { background:linear-gradient(135deg,#ff9500,#ffe066); color:#000; }
+    .c2  { background:linear-gradient(135deg,#74b9ff,#0984e3); color:#fff; }
+    .c3  { background:linear-gradient(135deg,#00cec9,#55efc4); color:#000; }
+    .c4  { background:linear-gradient(135deg,#fd79a8,#e84393); color:#fff; }
+    .c5  { background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:#fff; }
+    .c6  { background:linear-gradient(135deg,#ffeaa7,#fdcb6e); color:#000; }
+    .c7  { background:linear-gradient(135deg,#55efc4,#00b894); color:#000; }
+    .c8  { background:linear-gradient(135deg,#ff7675,#d63031); color:#fff; }
+    .c9  { background:linear-gradient(135deg,#636e72,#2d3436); color:#fff; }
+    .c10 { background:linear-gradient(135deg,#e17055,#d63031); color:#fff; }
 
-    /* ===== ANIMATIONS ===== */
-
-    /* Cherry bounce */
-    .cherry-layer {
-      animation: cherryBounce 1.5s infinite ease-in-out;
+    /* HUD */
+    #hud {
+      position:absolute;
+      bottom:10px; left:12px;
+      font-size:0.75rem;
+      color:rgba(255,255,255,0.5);
+      pointer-events:none;
     }
-    @keyframes cherryBounce {
-      0%, 100% { transform: translateY(0px); }
-      50%       { transform: translateY(-6px); }
-    }
-
-    /* Whip cream wobble */
-    .whip-layer {
-      animation: whipWobble 2s infinite ease-in-out;
-    }
-    @keyframes whipWobble {
-      0%, 100% { transform: scaleX(1); }
-      50%       { transform: scaleX(1.04); }
-    }
-
-    /* Scoop 1 wiggle */
-    .scoop1-layer {
-      animation: scoopWiggle 3s infinite ease-in-out;
-    }
-    @keyframes scoopWiggle {
-      0%, 100% { transform: rotate(0deg); }
-      25%       { transform: rotate(1.5deg); }
-      75%       { transform: rotate(-1.5deg); }
-    }
-
-    /* Scoop 2 pulse */
-    .scoop2-layer {
-      animation: scoopPulse 2.5s infinite ease-in-out;
-    }
-    @keyframes scoopPulse {
-      0%, 100% { transform: scale(1); }
-      50%       { transform: scale(1.02); }
-    }
-
-    /* Drip melt */
-    .drip-layer {
-      animation: dripMelt 2s infinite ease-in-out;
-    }
-    @keyframes dripMelt {
-      0%, 100% { transform: scaleY(1); }
-      50%       { transform: scaleY(1.05); }
-    }
-
-    /* Cone sway */
-    .cone-layer {
-      animation: coneSway 4s infinite ease-in-out;
-    }
-    @keyframes coneSway {
-      0%, 100% { transform: rotate(0deg); }
-      25%       { transform: rotate(1deg); }
-      75%       { transform: rotate(-1deg); }
-    }
-
-    /* Sparkles */
-    .sparkle {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      animation: sparklePop 2s infinite ease-in-out;
-      opacity: 0;
-    }
-    .sparkle:nth-child(1) { background: #ff6b9d; top: 10px; left: 20px; animation-delay: 0s; }
-    .sparkle:nth-child(2) { background: #a29bfe; top: 30px; right: 15px; animation-delay: 0.4s; }
-    .sparkle:nth-child(3) { background: #ffeaa7; top: 60px; left: 5px; animation-delay: 0.8s; }
-    .sparkle:nth-child(4) { background: #55efc4; top: 80px; right: 10px; animation-delay: 1.2s; }
-    .sparkle:nth-child(5) { background: #fd79a8; top: 0px; right: 30px; animation-delay: 0.6s; }
-
-    @keyframes sparklePop {
-      0%, 100% { opacity: 0; transform: scale(0); }
-      50%       { opacity: 1; transform: scale(1.4); }
-    }
-
-    /* ===== DISASSEMBLE STATE ===== */
-    .icecream.disassembled .layer-cherry  { transform: translateY(-180px) rotate(20deg); }
-    .icecream.disassembled .layer-whip    { transform: translateY(-130px) translateX(40px) rotate(-15deg); }
-    .icecream.disassembled .layer-scoop1  { transform: translateY(-80px) translateX(-35px) rotate(10deg); }
-    .icecream.disassembled .layer-drip    { transform: translateY(60px) translateX(30px) rotate(-8deg); }
-    .icecream.disassembled .layer-scoop2  { transform: translateY(110px) translateX(-25px) rotate(12deg); }
-    .icecream.disassembled .layer-cone    { transform: translateY(180px) rotate(-5deg); }
-
-    .icecream.disassembled .cherry-layer  { animation: none; }
-    .icecream.disassembled .whip-layer    { animation: none; }
-    .icecream.disassembled .scoop1-layer  { animation: none; }
-    .icecream.disassembled .scoop2-layer  { animation: none; }
-    .icecream.disassembled .drip-layer    { animation: none; }
-    .icecream.disassembled .cone-layer    { animation: none; }
-    .icecream.disassembled .sparkle       { animation: none; opacity: 0; }
-
-    /* ===== LABELS ===== */
-    .layer-label {
-      position: absolute;
-      right: -95px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.72rem;
-      color: #e91e8c;
-      opacity: 0;
-      transition: opacity 0.5s ease 0.6s;
-      white-space: nowrap;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .icecream.disassembled .layer-label { opacity: 1; }
-
-    /* ===== BUTTONS ===== */
-    .btn-group {
-      display: flex;
-      gap: 16px;
-      margin-top: 50px;
-    }
-
-    button {
-      padding: 14px 36px;
-      border: none;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: all 0.3s ease;
-    }
-
-    #disassembleBtn {
-      background: linear-gradient(135deg, #e91e8c, #f48fb1);
-      color: white;
-      box-shadow: 0 4px 20px rgba(233,30,140,0.4);
-    }
-    #disassembleBtn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(233,30,140,0.6);
-    }
-
-    #assembleBtn {
-      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-      color: white;
-      box-shadow: 0 4px 20px rgba(108,92,231,0.4);
-      display: none;
-    }
-    #assembleBtn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(108,92,231,0.6);
+    #speedHud {
+      position:absolute;
+      bottom:10px;right:12px;
+      font-size:0.75rem;
+      color:rgba(255,255,255,0.5);
     }
   </style>
 </head>
 <body>
 
-  <h1>Ice Cream Builder</h1>
-  <p class="subtitle">A perfectly crafted animated ice cream</p>
+<header>
+  <h1>🚀 SOLAR SYSTEM EXPLORER</h1>
+  <p>Click any planet to learn about it!</p>
+</header>
 
-  <div class="icecream-scene">
-    <div class="icecream" id="icecream">
+<canvas id="solarCanvas"></canvas>
 
-      <!-- Sparkles around -->
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
-      <div class="sparkle"></div>
+<div class="controls">
+  <button class="ctrl c1" onclick="speedUp()">⚡ Speed Up</button>
+  <button class="ctrl c2" onclick="slowDown()">🐢 Slow Down</button>
+  <button class="ctrl c3" onclick="toggleLabels()">🏷️ Labels</button>
+  <button class="ctrl c4" onclick="toggleOrbits()">⭕ Orbits</button>
+  <button class="ctrl c5" onclick="toggleMoons()">🌙 Moons</button>
+  <button class="ctrl c6" onclick="toggleAsteroid()">☄️ Asteroids</button>
+  <button class="ctrl c7" onclick="toggleComet()">🌠 Comet</button>
+  <button class="ctrl c8" onclick="startQuiz()">🧠 Quiz!</button>
+  <button class="ctrl c9" onclick="zoomIn()">🔭 Zoom In</button>
+  <button class="ctrl c9" onclick="zoomOut()">🔍 Zoom Out</button>
+  <button class="ctrl c10" onclick="resetView()">🔄 Reset</button>
+</div>
 
-      <!-- CHERRY -->
-      <div class="layer layer-cherry cherry-layer">
-        <span class="layer-label">Cherry</span>
-        <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
-          <!-- stem -->
-          <path d="M100,45 Q110,20 120,10" stroke="#4caf50" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <!-- cherry -->
-          <circle cx="123" cy="10" r="10" fill="#e53935"/>
-          <ellipse cx="120" cy="7" rx="4" ry="3" fill="rgba(255,255,255,0.3)" transform="rotate(-30 120 7)"/>
-          <!-- center cherry -->
-          <circle cx="100" cy="42" r="13" fill="#c62828"/>
-          <ellipse cx="96" cy="38" rx="5" ry="4" fill="rgba(255,255,255,0.3)" transform="rotate(-20 96 38)"/>
-        </svg>
-      </div>
+<!-- Fact Card -->
+<div id="overlay" onclick="closeCard()"></div>
+<div id="factCard">
+  <div class="planet-icon" id="factIcon"></div>
+  <h2 id="factTitle"></h2>
+  <p id="factDesc"></p>
+  <ul class="facts-list" id="factsList"></ul>
+  <button id="closeCard" onclick="closeCard()">Got it! ✓</button>
+</div>
 
-      <!-- WHIPPED CREAM -->
-      <div class="layer layer-whip whip-layer" style="margin-top:-12px;">
-        <span class="layer-label">Whipped Cream</span>
-        <svg viewBox="0 0 200 55" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="whipGrad" cx="50%" cy="30%" r="60%">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="100%" stop-color="#f0e6ff"/>
-            </radialGradient>
-          </defs>
-          <!-- whip swirl -->
-          <path d="M100,5 Q125,5 130,20 Q135,35 110,40 Q90,45 80,35 Q65,25 80,15 Q90,8 100,5 Z" fill="url(#whipGrad)"/>
-          <path d="M100,5 Q85,2 78,12 Q70,22 82,30" fill="none" stroke="rgba(220,200,255,0.6)" stroke-width="2"/>
-          <!-- small peaks -->
-          <ellipse cx="60" cy="42" rx="22" ry="12" fill="url(#whipGrad)"/>
-          <ellipse cx="140" cy="40" rx="20" ry="11" fill="url(#whipGrad)"/>
-          <!-- sprinkles -->
-          <rect x="85" y="18" width="8" height="3" rx="1.5" fill="#ff6b9d" transform="rotate(-30 85 18)"/>
-          <rect x="108" y="12" width="8" height="3" rx="1.5" fill="#a29bfe" transform="rotate(20 108 12)"/>
-          <rect x="95" y="28" width="7" height="3" rx="1.5" fill="#ffeaa7" transform="rotate(10 95 28)"/>
-          <rect x="118" y="25" width="7" height="3" rx="1.5" fill="#55efc4" transform="rotate(-15 118 25)"/>
-        </svg>
-      </div>
+<!-- Quiz Panel -->
+<div id="quizPanel">
+  <h2>🧠 Planet Quiz!</h2>
+  <div id="quizQuestion"></div>
+  <div id="quizOptions"></div>
+  <div id="quizFeedback"></div>
+  <div id="quizScore"></div>
+  <button id="quizNext" onclick="nextQuestion()">Next ➡️</button>
+  <button id="quizClose" onclick="closeQuiz()">Close</button>
+</div>
 
-      <!-- SCOOP 1 (Strawberry) -->
-      <div class="layer layer-scoop1 scoop1-layer" style="margin-top:-15px;">
-        <span class="layer-label">Strawberry Scoop</span>
-        <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="scoop1Grad" cx="40%" cy="35%" r="60%">
-              <stop offset="0%" stop-color="#ff8a80"/>
-              <stop offset="100%" stop-color="#e53935"/>
-            </radialGradient>
-          </defs>
-          <ellipse cx="100" cy="48" rx="88" ry="42" fill="url(#scoop1Grad)"/>
-          <!-- shine -->
-          <ellipse cx="72" cy="30" rx="22" ry="12" fill="rgba(255,255,255,0.25)" transform="rotate(-20 72 30)"/>
-          <!-- texture dots -->
-          <circle cx="90" cy="55" r="4" fill="rgba(200,0,0,0.2)"/>
-          <circle cx="115" cy="42" r="3" fill="rgba(200,0,0,0.2)"/>
-          <circle cx="130" cy="60" r="4" fill="rgba(200,0,0,0.2)"/>
-          <circle cx="75" cy="65" r="3" fill="rgba(200,0,0,0.2)"/>
-        </svg>
-      </div>
-
-      <!-- DRIP / SAUCE -->
-      <div class="layer layer-drip drip-layer" style="margin-top:-10px;">
-        <span class="layer-label">Chocolate Drizzle</span>
-        <svg viewBox="0 0 200 28" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12,0 L188,0 L188,10 Q175,28 165,10 Q155,0 145,12 Q135,24 125,10 Q115,0 105,14 Q95,26 85,10 Q75,0 65,14 Q55,26 45,10 Q38,0 28,12 Q18,24 12,10 Z"
-                fill="#5d4037" opacity="0.85"/>
-        </svg>
-      </div>
-
-      <!-- SCOOP 2 (Vanilla) -->
-      <div class="layer layer-scoop2 scoop2-layer" style="margin-top:-8px;">
-        <span class="layer-label">Vanilla Scoop</span>
-        <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="scoop2Grad" cx="40%" cy="35%" r="60%">
-              <stop offset="0%" stop-color="#fff9c4"/>
-              <stop offset="100%" stop-color="#f9a825"/>
-            </radialGradient>
-          </defs>
-          <ellipse cx="100" cy="48" rx="88" ry="42" fill="url(#scoop2Grad)"/>
-          <!-- shine -->
-          <ellipse cx="72" cy="30" rx="22" ry="12" fill="rgba(255,255,255,0.35)" transform="rotate(-20 72 30)"/>
-          <!-- vanilla bean specks -->
-          <line x1="95" y1="45" x2="98" y2="55" stroke="#8d6e63" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="108" y1="38" x2="111" y2="48" stroke="#8d6e63" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="118" y1="55" x2="121" y2="65" stroke="#8d6e63" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="82" y1="58" x2="85" y2="68" stroke="#8d6e63" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-
-      <!-- CONE -->
-      <div class="layer layer-cone cone-layer" style="margin-top:-5px;">
-        <span class="layer-label">Waffle Cone</span>
-        <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="coneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffcc80"/>
-              <stop offset="100%" stop-color="#e65100"/>
-            </linearGradient>
-          </defs>
-          <!-- cone shape -->
-          <path d="M30,0 L170,0 L105,128 Z" fill="url(#coneGrad)"/>
-          <!-- waffle grid lines horizontal -->
-          <line x1="35" y1="20" x2="165" y2="20" stroke="rgba(150,60,0,0.3)" stroke-width="1.5"/>
-          <line x1="45" y1="40" x2="155" y2="40" stroke="rgba(150,60,0,0.3)" stroke-width="1.5"/>
-          <line x1="57" y1="60" x2="143" y2="60" stroke="rgba(150,60,0,0.3)" stroke-width="1.5"/>
-          <line x1="70" y1="80" x2="130" y2="80" stroke="rgba(150,60,0,0.3)" stroke-width="1.5"/>
-          <line x1="83" y1="100" x2="117" y2="100" stroke="rgba(150,60,0,0.3)" stroke-width="1.5"/>
-          <!-- waffle grid lines diagonal -->
-          <line x1="60" y1="0" x2="106" y2="128" stroke="rgba(150,60,0,0.2)" stroke-width="1.5"/>
-          <line x1="90" y1="0" x2="106" y2="128" stroke="rgba(150,60,0,0.2)" stroke-width="1.5"/>
-          <line x1="120" y1="0" x2="106" y2="128" stroke="rgba(150,60,0,0.2)" stroke-width="1.5"/>
-          <line x1="150" y1="0" x2="106" y2="128" stroke="rgba(150,60,0,0.2)" stroke-width="1.5"/>
-          <!-- cone highlight -->
-          <path d="M30,0 L75,0 L106,128 Z" fill="rgba(255,255,255,0.1)"/>
-        </svg>
-      </div>
-
-    </div><!-- end .icecream -->
-  </div><!-- end .icecream-scene -->
-
-  <div class="btn-group">
-    <button id="disassembleBtn">Disassemble</button>
-    <button id="assembleBtn">Reassemble</button>
-  </div>
-
-  <script src="burger.js"></script>
-
+<script src="burger.js"></script>
 </body>
 </html>
